@@ -207,7 +207,10 @@ tmeet
 > **辅助脚本**：
 > - `scripts/check-conflict.sh` — 批量创建会议时的冲突检测，详见 [`references/tmeet-meeting.md`](references/tmeet-meeting.md)
 > - `scripts/transfer-invitees.sh` — 历史会议受邀人一键继承，详见 [`references/tmeet-meeting.md`](references/tmeet-meeting.md)
-> - `scripts/fetch-records.sh` — 跨会议批量获取转写/纪要，详见 [`references/tmeet-record.md`](references/tmeet-record.md)
+> - `scripts/fetch-records.sh` — 跨会议批量获取转写/纪要/待办，详见 [`references/tmeet-record.md`](references/tmeet-record.md)
+> - `scripts/todo-kanban.sh` — 将待办 JSON 生成可拖拽 HTML 看板，详见 [`references/tmeet-record.md`](references/tmeet-record.md)
+> - `scripts/todo-to-sheet.sh` — 将待办 JSON 转为腾讯文档 sheet 写入参数，详见 [`references/tmeet-record.md`](references/tmeet-record.md)
+> - `scripts/todo-to-doc.sh` — 将待办 JSON 生成 Markdown 复盘报告，详见 [`references/tmeet-record.md`](references/tmeet-record.md)
 
 ## 安全规则
 

@@ -7,14 +7,16 @@
 
 ## 一、已完成
 
-### v0.0.1 ~ v0.0.2 内容
+### v0.0.1 ~ v0.0.3 内容
 
 | 能力 | 实现方式 | 说明 |
 |------|---------|------|
 | **官方 tmeet-skill 全部能力** | 继承自 `connectors-marketplace/connectors/tmeet/skills/` | 会议管理、录制、通讯录、会中控制、反馈 |
 | **方向 1：智能日程编排** | `scripts/check-conflict.sh` | stdin 接日程 JSON → 按日期分组调 `tmeet meeting list` → 时间交集检测 → 输出冲突报告 |
-| **方向 2：录制深度消费** | `scripts/fetch-records.sh` | stdin 接查询条件 → `list-ended` + 关键词过滤 → `record list` → `transcript-get`/`smart-minutes` → 合并 Markdown |
+| **方向 2：录制深度消费** | `scripts/fetch-records.sh` | stdin 接查询条件 → `list-ended` + 关键词过滤 → `record list` → `transcript-get`/`smart-minutes` → 合并 Markdown。支持 transcript-search 关键词搜索 + 上下文窗口 + 区间合并。支持 `todo_only` 模式提取 @负责人 待办 |
 | **方向 3：受邀者继承** | `scripts/transfer-invitees.sh` | 源 meeting_id → 自动翻页 `invitees-list` → 提取 open_id → `invitees-add` |
+| **待办看板** | `scripts/todo-kanban.sh` | 待办 JSON → 自包含 HTML 看板（三栏拖拽 + 筛选 + 撤销重做 + 新增卡片） |
+| **腾讯文档同步** | `scripts/todo-to-sheet.sh` / `scripts/todo-to-doc.sh` | 待办 JSON → sheet values 数组或 Markdown 报告。依赖 `tencent-docs` MCP 连接器写入，AI 只做 base64 编码 + 一次 MCP 调用 |
 
 ### 文件结构
 
@@ -27,6 +29,9 @@ tmeet-skill-pro/
 │   ├── check-conflict.sh        # 13/13 单元测试通过 + 真实 CLI 集成通过
 │   ├── fetch-records.sh          # 批量捞转写/纪要 + 关键词搜索，合并 Markdown（22 用例）
 │   ├── transfer-invitees.sh      # 受邀人自动转移，Python HEREDOC 重写，支持 mock（8 用例）
+│   ├── todo-kanban.sh              # 待办 JSON → 可拖拽 HTML 看板
+│   ├── todo-to-sheet.sh            # 待办 JSON → 腾讯文档 sheet values 数组
+│   ├── todo-to-doc.sh              # 待办 JSON → Markdown 复盘报告
 │   ├── test-check-conflict.sh    # 冲突检测单元测试（mock，13 用例）
 │   ├── test-fetch-records.sh     # 录制消费单元测试（mock，22 用例）
 │   ├── test-fetch-records-data.json
@@ -55,6 +60,8 @@ tmeet-skill-pro/
   - `report participants` 非发起人返回 9042 无权限，不存在授权机制
   - `transcript-search` 返回命中 pid/sid/offset，需 `transcript-get --pid --limit` 取原文
 - **SkillHub 搜索机制**（v0.0.2 实测）：不索引 `description` 字段，仅匹配 `slug` + `displayName`。需将核心关键词放入 `displayName`。
+- **待办提取**（v0.0.3）：正则匹配「- task。 @owner」模式，5 行代码。`smart-minutes` 纪要尾部有标准化待办格式。
+- **腾讯文档集成**（v0.0.3）：MCP 支持 sheet（在线表格）和 doc（文档）两种产物。不推荐 smartsheet（默认字段干扰 + MCP 不支持配置看板分组）。写入前由 `todo-to-sheet.sh`/`todo-to-doc.sh` 生成标准化格式，AI 只需 base64 编码 + 一次 MCP 调用。
 
 ---
 

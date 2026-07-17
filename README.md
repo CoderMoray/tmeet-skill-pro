@@ -20,39 +20,82 @@
 
 ---
 
-## 三个增强
+## 覆盖的会议场景
+
+| 场景 | 参赛方向 | 能力 |
+|------|:--:|------|
+| 会前准备 | 01 | 一键批量排期 + 冲突检测 + 历史受邀人复用 |
+| 会后跟进 | 03 | 跨会议转录/纪要汇总 → 本地看板 + 腾讯文档同步 |
+| 效率洞察 | 04 | 关键词搜索「谁提了XX」→ 命中段落 + 上下文 |
+| 场景串联 | 05 | 周报/复盘/面试/培训，同一套工具全搞定 |
+
+---
+
+## 核心能力
 
 ### 1. 批量创建 + 冲突检测 `check-conflict.sh`
 
 不用手动翻日历。说「下周一到周五上午 9 点站会」，AI 自动展开日期、检测冲突、列报告给你确认。
 
 ```bash
-# 独立运行
 echo '[{"date":"2026-07-20","start":"09:00","end":"09:30","subject":"站会"}]' \
   | bash scripts/check-conflict.sh
 ```
 
 ### 2. 录制深度消费 `fetch-records.sh`
 
-不用逐场翻录播。说「过去一个月所有面试的转写汇总」，脚本自动跨会议捞内容、合并 Markdown。支持关键词搜索 + 上下文窗口。
+不用逐场翻录播。全文转录、关键词搜索、待办提取，一条命令搞定。
 
 ```bash
 # 全文转写
 echo '{"start":"2026-07-01","end":"2026-07-17","keyword":"面试","content_type":"transcript"}' \
   | bash scripts/fetch-records.sh
 
-# 关键词搜索（命中段落 + 前后 2 段上下文）
-echo '{"start":"2026-07-01","end":"2026-07-17","keyword":"周会","content_type":"transcript","search_text":"延期","context_paragraphs":2}' \
+# 关键词搜索（命中段落 + 上下文窗口）
+echo '{"start":"2026-07-01","end":"2026-07-17","search_text":"延期","context_paragraphs":2}' \
+  | bash scripts/fetch-records.sh
+
+# 待办提取
+echo '{"start":"2026-07-01","end":"2026-07-17","todo_only":true}' \
   | bash scripts/fetch-records.sh
 ```
 
-### 3. 受邀人继承 `transfer-invitees.sh`
+### 3. 待办看板 `todo-kanban.sh`
 
-不用逐个重新邀请。说「把上次项目复盘会的受邀人拉进这次会议」，脚本自动翻页提取全部受邀人、一次性添加。
+待办 JSON → 可拖拽 HTML 看板，三栏布局 + 筛选 + 撤销重做。
+
+```bash
+echo '{"start":"2026-07-01","end":"2026-07-17","todo_only":true}' \
+  | bash scripts/fetch-records.sh \
+  | bash scripts/todo-kanban.sh \
+  > kanban.html
+```
+
+### 4. 受邀人继承 `transfer-invitees.sh`
+
+不用逐个重新邀请。说「把上次项目复盘会的受邀人拉进这次会议」，自动翻页提取全部受邀人、一次性添加。
 
 ```bash
 bash scripts/transfer-invitees.sh <源meeting_id> <目标meeting_id>
 ```
+
+### 5. 腾讯文档同步 `todo-to-sheet.sh` / `todo-to-doc.sh`
+
+待办数据一键推送到腾讯文档——在线表格（可筛选排序）或复盘报告文档。
+
+```bash
+# 生成 sheet 写入参数
+echo '{"start":"2026-07-01","end":"2026-07-17","todo_only":true}' \
+  | bash scripts/fetch-records.sh \
+  | bash scripts/todo-to-sheet.sh
+
+# 生成复盘 Markdown 报告
+echo '{"start":"2026-07-01","end":"2026-07-17","todo_only":true}' \
+  | bash scripts/fetch-records.sh \
+  | bash scripts/todo-to-doc.sh
+```
+
+> 需安装 `tencent-docs` 连接器：`skillhub install tencent-docs` + WorkBuddy 连接器面板启用
 
 ---
 
@@ -100,15 +143,18 @@ tmeet-skill-pro/
 │   ├── check-conflict.sh           # 批量创建冲突检测
 │   ├── fetch-records.sh            # 跨会议录制内容消费
 │   ├── transfer-invitees.sh        # 受邀人一键继承
+│   ├── todo-kanban.sh              # 待办 JSON → 可拖拽 HTML 看板
+│   ├── todo-to-sheet.sh            # 待办 JSON → 腾讯文档 sheet 参数
+│   ├── todo-to-doc.sh              # 待办 JSON → Markdown 复盘报告
 │   ├── test-check-conflict.sh      # 测试 (13 用例)
 │   ├── test-fetch-records.sh       # 测试 (22 用例)
 │   ├── test-fetch-records-data.json
 │   ├── test-transfer-invitees.sh   # 测试 (8 用例)
 │   └── test-transfer-invitees-data.json
-└── references/                 # CLI 命令参考文档
+└── references/                 # CLI 命令参考 + 增强工作流文档
     ├── tmeet-auth.md
-    ├── tmeet-meeting.md        # 含增强工作流
-    ├── tmeet-record.md         # 含增强工作流
+    ├── tmeet-meeting.md
+    ├── tmeet-record.md
     ├── tmeet-contact.md
     ├── tmeet-control.md
     ├── tmeet-report.md

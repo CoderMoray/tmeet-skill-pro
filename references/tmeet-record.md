@@ -318,6 +318,7 @@ stdin 传入 JSON 查询条件：
 | `content_type` | 否 | `transcript` | `transcript`-逐字转写 / `minutes`-AI 纪要 |
 | `search_text` | 否 | — | 在转写内容中搜索的关键词，启用搜索模式（仅 `transcript` 模式有效） |
 | `context_paragraphs` | 否 | 2 | 搜索模式下每个命中段前后包含的段落数 |
+| `todo_only` | 否 | `false` | 仅提取待办（@负责人），输出 JSON。强制 `content_type=minutes`，静默模式（无 Markdown 头） |
 | `reference_date` | 否 | — | AI 计算日期时的参考锚点，用于校验。当 AI 的计算依赖"今天"时必传 |
 
 ### 输出
@@ -338,7 +339,91 @@ echo '{"start":"2026-06-01","end":"2026-07-01","keyword":"面试","content_type"
 
 # 关键词搜索 + 上下文窗口
 echo '{"start":"2026-06-01","end":"2026-07-01","keyword":"周会","content_type":"transcript","search_text":"延期","context_paragraphs":2}' | scripts/fetch-records.sh
+
+# 仅提取待办（输出 JSON）
+echo '{"start":"2026-07-01","end":"2026-07-17","todo_only":true}' | scripts/fetch-records.sh
 ```
+
+### 跨会议待办看板
+
+`fetch-records.sh --todo-only` 提取 JSON 后，用 `todo-kanban.sh` 生成自包含 HTML 看板：
+
+```bash
+echo '{"start":"2026-07-01","end":"2026-07-17","todo_only":true}' \
+  | scripts/fetch-records.sh \
+  | scripts/todo-kanban.sh \
+  > outputs/kanban.html
+```
+
+**HTML 可直接浏览器打开**，支持三栏拖拽、筛选（会议/负责人/日期）、撤销重做、手动新增卡片。
+
+**AI 生成后必须主动让用户查看**：
+- 优先用当前客户端内置的预览/展示工具（如 WorkBuddy 的 `present_files`）
+- 没有内置工具则尝试系统命令唤起浏览器（如 `open`/`start`/`xdg-open`）
+- 都不行则告知文件绝对路径，请用户用浏览器打开
+- 生成完立刻执行，不要等用户催
+
+### 腾讯文档同步（需用户显式要求）
+
+仅在用户明确说「同步到腾讯文档」时才走此路径。定位是**会议数据云端备份**——把待办、纪要、转写等沉淀到腾讯文档，方便团队共享和历史检索。
+
+**前置条件**：`tencent-docs` 连接器已安装并启用（`skillhub install tencent-docs` + 连接器面板连接）。未安装则提示用户。
+
+**AI 可按需调整模板**，但默认使用以下标准格式。
+
+---
+
+#### 模板一：在线表格（待办追踪）
+
+推荐 `file_type: "sheet"`，不用智能表格（自带干扰字段 + 看板配置缺失）。
+
+| 列 | A | B | C | D | E |
+|------|---|---|---|---|---|
+| 表头 | 待办内容 | 负责人 | 来源会议 | 日期 | 状态 |
+| 默认值 | — | — | — | — | 待开始 |
+
+AI 操作：
+1. `fetch-records.sh --todo-only` 拿 todo JSON
+2. `todo-to-sheet.sh` 转成 MCP values 数组
+3. `manage.create_file(file_type:"sheet")` 创建表格 → 得到 `file_id` + `url`
+4. `sheet.get_sheet_info` 拿 `sheet_id`
+5. `sheet.set_range_value(values=<第2步输出>)` 写入
+6. 返回链接
+5. 返回链接
+
+可选增强（AI 自行判断）：
+- 按会议分组用空行分隔
+- 行首加 checkbox（`☐ ` 前缀）
+- 状态列用下拉选项替代文本
+- 会议综述、负责人汇总等附属 sheet
+
+---
+
+#### 模板二：在线文档（会议复盘报告）
+
+推荐 `file_type: "doc"`，用 `todo-to-doc.sh` 生成 Markdown，AI 只需 base64 编码后写入。
+
+AI 操作：
+1. `fetch-records.sh --todo-only | todo-to-doc.sh` 生成 Markdown
+2. 对输出做 base64 编码
+3. `doc.create_with_markdown(title="...", base64_markdown=<编码>)` 创建文档
+4. 返回链接
+
+报告模板（由脚本自动生成）：标题、日期、待办表格、会议来源列表、脚注。
+
+**AI 加工指引**。脚本输出是标准骨架，AI 应在此基础上按用户需求润色后写入：
+
+- **标题**：从默认「跨会议待办复盘报告」改为用户语境标题（如「Q3 排班项目跟进」「本周面试复盘」）
+- **摘要**：如果有完整纪要数据，追加 `## 核心摘要` 段落，提炼 3-5 条结论
+- **分组**：待办较多时，用 `### 按负责人分组` 重新组织，而非单一大表
+- **精简**：用户说「只看摘要」，删掉表格只保留结论段落
+- **语气**：正式汇报 vs 内部速记，调整措辞
+
+遵循优先级：用户显式要求 > 合理推断 > 默认模板。
+
+---
+
+**模板不是锁死的**。AI 看到用户有具体要求（如「只给我 XX 负责人的」「要带截止时间」「按优先级高低排序」）时，应在标准模板基础上调整列数、分组方式、文案风格。
 
 ### 注意事项
 

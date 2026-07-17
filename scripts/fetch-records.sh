@@ -443,6 +443,28 @@ def extract_speakers_from_minutes(text):
     return []
 
 
+def extract_todos(text, meeting_subject, meeting_date):
+    """Extract todo items from smart-minutes text.
+    Pattern: - todo_description。 @owner_name
+    Returns list of {todo, owner, meeting, date}.
+    """
+    import re
+    todos = []
+    # Match lines like: - 整理算法规则（硬约束与软约束）。 @Donnia
+    pattern = r'[-•]\s+(.+?)(?:[。.])?\s*@(\S+)'
+    for m in re.finditer(pattern, text):
+        todo_text = m.group(1).strip()
+        owner = m.group(2).strip().rstrip('.。')
+        if todo_text:
+            todos.append({
+                "todo": todo_text,
+                "owner": owner,
+                "meeting": meeting_subject,
+                "date": meeting_date[:10] if meeting_date else "",
+            })
+    return todos
+
+
 def get_minutes(record_file_id):
     """Fetch smart minutes. Returns (text, speakers, error)."""
     if MOCK:
@@ -544,24 +566,30 @@ def main():
     reference_date = q.get("reference_date", "")
     search_text = q.get("search_text", "")
     context_paragraphs = q.get("context_paragraphs", 2)
+    todo_only = q.get("todo_only", False)
+
+    # todo_only forces minutes mode
+    if todo_only:
+        content_type = "minutes"
 
     start_iso = iso_range(start, start_of_day=True)
     end_iso = iso_range(end, start_of_day=False)
 
     # Document header
-    print(f"# 录制内容汇总：{start} ~ {end}")
-    if reference_date:
-        print(f"- 参考日期：{reference_date}")
-    kw_display = f"，关键词：{keyword}" if keyword else ""
-    print(f"- 匹配范围：最多 {max_meetings} 场{kw_display}")
-    ct_display = "转写" if content_type == "transcript" else "纪要"
-    if search_text:
-        ct_display += f"（搜索「{search_text}」）"
-    print(f"- 内容类型：{ct_display}")
-    if warnings:
-        for w in warnings:
-            print(f"- ⚠️ {w}")
-    print()
+    if not todo_only:
+        print(f"# 录制内容汇总：{start} ~ {end}")
+        if reference_date:
+            print(f"- 参考日期：{reference_date}")
+        kw_display = f"，关键词：{keyword}" if keyword else ""
+        print(f"- 匹配范围：最多 {max_meetings} 场{kw_display}")
+        ct_display = "转写" if content_type == "transcript" else "纪要"
+        if search_text:
+            ct_display += f"（搜索「{search_text}」）"
+        print(f"- 内容类型：{ct_display}")
+        if warnings:
+            for w in warnings:
+                print(f"- ⚠️ {w}")
+        print()
 
     # Step 1: get meetings
     meetings, err = get_ended_meetings(start_iso, end_iso)
@@ -579,7 +607,8 @@ def main():
     total_after = len(meetings)
 
     if total_before != total_after:
-        print(f"_共找到 {total_before} 场会议，匹配 {total_after} 场_\n")
+        if not todo_only:
+            print(f"_共找到 {total_before} 场会议，匹配 {total_after} 场_\n")
 
     if not meetings:
         print("没有匹配的会议。")
@@ -587,6 +616,7 @@ def main():
 
     # Step 3-4: process each meeting
     idx = 0
+    all_todos = []
     for m in meetings:
         idx += 1
         subject = m["subject"]
@@ -599,55 +629,69 @@ def main():
         if duration:
             time_display += f"（{duration}）"
 
-        print(f"### {idx}. {subject}")
-        print(f"- 会议号：{meeting_code}")
-        print(f"- 时间：{time_display}")
-        print(f"- 类型：{meeting_type}")
+        if not todo_only:
+            print(f"### {idx}. {subject}")
+            print(f"- 会议号：{meeting_code}")
+            print(f"- 时间：{time_display}")
+            print(f"- 类型：{meeting_type}")
 
         # Get recording
         rec = get_recording(m["meeting_id"])
 
         if rec["status"] == "no_recording":
-            print("- 录制：无录制")
-            print(f"- 参会人：{PARTICIPANT_NO_PERMISSION}")
-            print("- 发言人：—")
-            print("- 内容：—")
-            print()
+            if not todo_only:
+                print("- 录制：无录制")
+                print(f"- 参会人：{PARTICIPANT_NO_PERMISSION}")
+                print("- 发言人：—")
+                print("- 内容：—")
+                print()
             continue
 
         if rec["status"] == "error":
-            print(f"- 录制：获取失败（{rec['detail']}）")
-            print(f"- 参会人：{PARTICIPANT_NO_PERMISSION}")
-            print("- 发言人：—")
-            print("- 内容：—")
-            print()
+            if not todo_only:
+                print(f"- 录制：获取失败（{rec['detail']}）")
+                print(f"- 参会人：{PARTICIPANT_NO_PERMISSION}")
+                print("- 发言人：—")
+                print("- 内容：—")
+                print()
             continue
 
-        record_state = f"{rec['record_type']}，{rec['state']}" if rec['record_type'] else rec['state']
-        print(f"- 录制：{record_state}")
+        if not todo_only:
+            record_state = f"{rec['record_type']}，{rec['state']}" if rec['record_type'] else rec['state']
+            print(f"- 录制：{record_state}")
 
-        # Get participants (best-effort)
-        participant_names, participant_status = get_participants(m["meeting_id"])
-        if participant_names:
-            count = len(participant_names)
-            print(f"- 参会人：{'、'.join(participant_names)}（{count} 人）")
-        else:
-            print(f"- 参会人：{PARTICIPANT_NO_PERMISSION}")
+            # Get participants (best-effort)
+            participant_names, participant_status = get_participants(m["meeting_id"])
+            if participant_names:
+                count = len(participant_names)
+                print(f"- 参会人：{'、'.join(participant_names)}（{count} 人）")
+            else:
+                print(f"- 参会人：{PARTICIPANT_NO_PERMISSION}")
 
         # Get content
         record_file_id = rec.get("record_file_id", "")
         if not record_file_id:
-            print("- 发言人：—")
-            print("- 内容：—")
-            print()
+            if not todo_only:
+                print("- 发言人：—")
+                print("- 内容：—")
+                print()
             continue
 
         # Only fetch content if recording is ready
         state = rec.get("state", "")
         if state and state not in ("转码完成", "ok"):
-            print("- 发言人：—")
-            print("- 内容：—（录制未就绪）")
-            print()
+            if not todo_only:
+                print("- 发言人：—")
+                print("- 内容：—（录制未就绪）")
+                print()
+            continue
+
+        # === todo_only: minutes extraction ===
+        if todo_only:
+            text, spk_list, min_err = get_minutes(record_file_id)
+            if not min_err and text:
+                todos = extract_todos(text, subject, start_t)
+                all_todos.extend(todos)
             continue
 
         if content_type == "transcript":
@@ -730,18 +774,26 @@ def main():
                 print("- 发言人：—")
 
             if min_err:
-                print(f"- 纪要内容：获取失败（{min_err}）")
+                if not todo_only:
+                    print(f"- 纪要内容：获取失败（{min_err}）")
             elif text:
-                print(f"- 纪要内容：")
-                print()
-                print(text)
+                if todo_only:
+                    todos = extract_todos(text, subject, start_t)
+                    all_todos.extend(todos)
+                else:
+                    print(f"- 纪要内容：")
+                    print()
+                    print(text)
             else:
                 print("- 纪要内容：—（无纪要数据）")
 
         print()
 
-    print("---")
-    print(f"_共处理 {idx} 场会议_")
+    if todo_only:
+        print(json.dumps(all_todos, ensure_ascii=False, indent=2))
+    else:
+        print("---")
+        print(f"_共处理 {idx} 场会议_")
 
 if __name__ == "__main__":
     main()
