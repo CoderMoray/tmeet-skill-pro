@@ -2,7 +2,7 @@
 
 > 让开会更简单 — 腾讯会议 CLI 增强版。在官方 tmeet-skill 基础上，用确定性脚本消灭 AI 幻觉，让你一句话搞定日程编排、会议复盘、受邀人管理。
 
-[![Version](https://img.shields.io/badge/version-0.0.3-blue)](https://skillhub.cn/skills/tmeet-skill-pro)
+[![Version](https://img.shields.io/badge/version-0.0.4-blue)](https://skillhub.cn/skills/tmeet-skill-pro)
 [![Tests](https://img.shields.io/badge/tests-43%20passed-brightgreen)](#)
 [![License](https://img.shields.io/badge/license-MIT-green)](./LICENSE)
 

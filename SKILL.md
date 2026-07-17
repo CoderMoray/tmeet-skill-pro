@@ -2,8 +2,8 @@
 name: tmeet-skill
 slug: tmeet-skill-pro
 displayName: 腾讯会议 Pro — 批量创建·转写纪要·冲突检测·受邀人继承
-version: 0.0.3
-description: "腾讯会议 CLI 增强版，在官方 tmeet-skill 基础上新增：智能日程编排（批量创建+冲突检测）、录制深度消费（跨会议批量获取转写/纪要并合并分析）、受邀者继承（一键复制历史会议受邀人）。保留官方全部能力，增加确定性计算脚本降低 AI 幻觉。"
+version: 0.0.4
+description: "腾讯会议 CLI 增强版，在官方 tmeet-skill 基础上新增：智能日程编排（批量创建+冲突检测）、录制深度消费（跨会议批量获取转写/纪要/待办并合并分析）、受邀者继承（一键复制历史会议受邀人）。保留官方全部能力，增加确定性计算脚本降低 AI 幻觉。支持本地看板与腾讯文档同步。"
 metadata:
   requires:
     bins: ["tmeet"]

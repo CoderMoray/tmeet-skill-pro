@@ -1,6 +1,6 @@
 # tmeet-skill-pro 开发计划
 
-> **当前版本**：v0.0.3（已发布至 SkillHub，slug: `tmeet-skill-pro`）
+> **当前版本**：v0.0.4（已发布至 SkillHub，slug: `tmeet-skill-pro`）
 > **项目根目录**：`~/Desktop/Moray/MyOpenSource/腾讯会议增强/skills/tmeet-skill-pro/`
 
 ---
@@ -22,7 +22,7 @@
 
 ```
 tmeet-skill-pro/
-├── SKILL.md                    # slug: tmeet-skill-pro, v0.0.3
+├── SKILL.md                    # slug: tmeet-skill-pro, v0.0.4
 ├── README.md
 ├── DEVPLAN.md
 ├── scripts/
@@ -84,11 +84,47 @@ tmeet-skill-pro/
 
 ## 三、知识依赖
 
-### 发布流程
+### 发布 Checklist
 
-1. 修改 Desktop 项目目录的 SKILL.md（改版本号、changelog 等）
-2. 运行 `skillhub publish ./tmeet-skill --changelog "..." --version x.x.x`
-3. 如果 skillhub token 过期：`skillhub auth login --token skh_xxx`
+每次 publish 前按顺序执行：
+
+1. **确认版本号** — SKILL.md 的 `version` 字段 + README.md 底部 + DEVPLAN.md 顶部，三处一致
+2. **更新 description** — SKILL.md 的 `description` 字段需覆盖所有已完成的增强能力
+3. **更新 displayName** — 如有新能力需体现在搜索关键词中（SkillHub 不索引 description）
+4. **更新辅助脚本引用** — SKILL.md 的「辅助脚本」节列出所有可执行脚本
+5. **更新 references/** — 增强功能的用法文档与对应能力章节同步
+6. **更新 README.md** — 能力列表、文件结构、使用示例与实际一致
+7. **更新 DEVPLAN.md** — 已完成能力表、文件结构、关键发现
+8. **运行全量测试** — 所有 `test-*.sh` 通过
+9. **dry-run** — `skillhub publish . --dry-run --json --version x.x.x`
+10. **publish** — `skillhub publish . --version x.x.x --json --changelog "…"`
+11. **git commit + push** — 确保 GitHub 同步
+
+Changelog 写法：版本号标题 + 编号列表，每条写「结果」而非「过程」。控制在 4-8 条，不列细节实现。示例：
+
+```
+v0.0.3：
+1. 新增待办提取：从智能纪要中自动提取 @负责人 任务项
+2. 新增本地待办看板：三栏拖拽 + 筛选 + 撤销重做
+3. 新增腾讯文档同步：支持在线表格和复盘报告两种产物
+4. 纪要模式自动提取发言人列表
+5. 三个脚本全部支持 mock 模式 + 单元测试（43 用例）
+```
+
+### 发布命令
+
+```bash
+cd <项目目录>
+skillhub publish . --version x.x.x --json --changelog "…"
+```
+
+**发布前必须排除的文件**（平台不允许）：
+- `.workbuddy/`、`.gitignore`、`LICENSE`
+- `DEVPLAN.md`（内部文档，非技能定义）
+- `outputs/`（产物示例）
+- `skills/`（安装的第三方依赖）
+
+Token 过期时：`skillhub auth login --token skh_xxx`
 
 ### 本地测试
 
