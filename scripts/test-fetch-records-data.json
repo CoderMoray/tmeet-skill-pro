@@ -1,0 +1,123 @@
+{
+  "list_ended": {
+    "meeting_info_list": [
+      {
+        "meeting_id": "m1",
+        "meeting_code": "111-222-333",
+        "subject": "产品周会",
+        "start_time": "2026-07-10T10:00:00+08:00",
+        "end_time": "2026-07-10T11:00:00+08:00",
+        "meeting_type": "普通会议"
+      },
+      {
+        "meeting_id": "m2",
+        "meeting_code": "444-555-666",
+        "subject": "前端面试 - 张三",
+        "start_time": "2026-07-11T14:00:00+08:00",
+        "end_time": "2026-07-11T15:00:00+08:00",
+        "meeting_type": "普通会议"
+      },
+      {
+        "meeting_id": "m3",
+        "meeting_code": "777-888-999",
+        "subject": "后端面试 - 李四",
+        "start_time": "2026-07-12T10:00:00+08:00",
+        "end_time": "2026-07-12T11:30:00+08:00",
+        "meeting_type": "普通会议"
+      },
+      {
+        "meeting_id": "m4",
+        "meeting_code": "000-111-222",
+        "subject": "Q3 策略会",
+        "start_time": "2026-07-13T14:00:00+08:00",
+        "end_time": "2026-07-13T16:00:00+08:00",
+        "meeting_type": "周期性会议"
+      }
+    ],
+    "next_page_token": ""
+  },
+  "record_list": {
+    "m1": {
+      "status": "ok",
+      "meeting_record_id": "mr1",
+      "record_file_id": "f1",
+      "record_type": "云录制",
+      "state": "转码完成",
+      "record_start_time": "2026-07-10T10:00:00+08:00",
+      "record_end_time": "2026-07-10T11:00:00+08:00"
+    },
+    "m2": {
+      "status": "ok",
+      "meeting_record_id": "mr2",
+      "record_file_id": "f2",
+      "record_type": "云录制",
+      "state": "转码完成",
+      "record_start_time": "2026-07-11T14:00:00+08:00",
+      "record_end_time": "2026-07-11T15:00:00+08:00"
+    },
+    "m3": {
+      "status": "no_recording"
+    },
+    "m4": {
+      "status": "ok",
+      "meeting_record_id": "mr4",
+      "record_file_id": "f4",
+      "record_type": "云录制",
+      "state": "转码中",
+      "record_start_time": "2026-07-13T14:00:00+08:00",
+      "record_end_time": "2026-07-13T16:00:00+08:00"
+    }
+  },
+  "participants": {
+    "m1": ["张经理", "李工", "小王"],
+    "m2": "no_permission",
+    "m3": "no_permission",
+    "m4": "no_permission"
+  },
+  "transcript": {
+    "f1": {
+      "text": "张经理：今天讨论一下Q3 roadmap\n李工：我这边的进度正常\n小王：我有个问题需要确认",
+      "speakers": ["张经理", "李工", "小王"]
+    },
+    "f2": {
+      "text": "面试官：请介绍一下你的项目经验\n张三：我在上家公司负责了一个电商平台\n面试官：遇到什么挑战\n张三：最大的挑战是高并发场景的优化",
+      "speakers": ["面试官", "张三"]
+    }
+  },
+  "minutes": {
+    "f1": {
+      "text": "发言人：张经理、李工、小王等3人\n\n会议摘要：讨论了Q3 roadmap规划，确认了各模块进度...\n\n一、进度汇报\n- 张经理：整体进度正常\n- 李工：后端模块80%完成\n- 小王：前端还有2个需求待确认",
+      "speakers": ["张经理", "李工", "小王"]
+    },
+    "f2": {
+      "text": "发言人：面试官、张三等2人\n\n会议摘要：前端面试，候选人有电商平台经验...",
+      "speakers": ["面试官", "张三"]
+    }
+  },
+  "transcript_search": {
+    "f1": ["0", "5", "6", "7", "10"],
+    "f2": ["1", "2", "3"]
+  },
+  "transcript_range": {
+    "f1": {
+      "0": {
+        "text": "张经理：今天讨论Q3 roadmap\n李工：我这边的进度正常",
+        "speakers": ["张经理", "李工"]
+      },
+      "3": {
+        "text": "李工：延期的问题我需要确认一下\n小王：哪个模块延期？\n李工：支付模块可能要延期两周",
+        "speakers": ["李工", "小王"]
+      },
+      "8": {
+        "text": "张经理：延期的话需要重新排期",
+        "speakers": ["张经理"]
+      }
+    },
+    "f2": {
+      "0": {
+        "text": "面试官：请介绍一下你的项目经验\n张三：我在上家公司负责了高并发电商平台\n面试官：遇到什么挑战\n张三：最大的挑战是高并发场景的优化",
+        "speakers": ["面试官", "张三"]
+      }
+    }
+  }
+}

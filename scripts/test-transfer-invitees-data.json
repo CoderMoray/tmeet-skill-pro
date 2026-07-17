@@ -1,0 +1,12 @@
+{
+  "invitees": [
+    {"open_id": "user_001", "user_name": "张三"},
+    {"open_id": "user_002", "user_name": "李四"},
+    {"open_id": "user_003", "user_name": "王五"},
+    {"open_id": "user_004", "user_name": "赵六"},
+    {"open_id": "user_005", "user_name": "钱七"}
+  ],
+  "invitees_add": {
+    "response": {"ok": true, "count": 5}
+  }
+}
